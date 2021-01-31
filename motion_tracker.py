@@ -32,7 +32,7 @@ def clear_path():
     del trajectory_y[:]
     del trajectory_z[:]
 
-def track_3d_motion(x,y,z,interval=0.01):
+def track_3d_motion(x,y,z,interval=0.1):
 
     dt = interval
     clear_path()

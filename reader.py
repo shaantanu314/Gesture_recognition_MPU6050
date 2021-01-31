@@ -8,14 +8,20 @@ import sys
 
 DEST_FILE = "./train.csv"
 
+
+confx = 0
+confy = 0
+confz = 0
+
 serialPort = serial.Serial(port = "/dev/ttyUSB0", baudrate=115200,bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE)
 window = 50
 index,acc_x,acc_y,acc_z = np.linspace(1,50,50),np.zeros((1,window)),np.zeros((1,window)),np.zeros((1,window))
 
-def get_serial_data():
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    fig.show()
+def get_serial_data(live_data=True):
+    if live_data == True:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        fig.show()
     global index,acc_x,acc_y,acc_z,window
     global serialPort
     i=window+1
@@ -24,6 +30,7 @@ def get_serial_data():
         data_string = None
         # Wait until there is data waiting in the serial buffer
         if(serialPort.in_waiting > 0):
+            # print('*')
             index = np.append(index,i)
             # Read data out of the buffer until a carraige return / new line is found
             serialString = serialPort.readline()
@@ -35,17 +42,18 @@ def get_serial_data():
             acc_x = np.append(acc_x,float(data[0])/100)
             acc_y = np.append(acc_y,float(data[1])/100)
             acc_z = np.append(acc_z,float(data[2])/100)
-            if len(acc_x) > 4*window:
-                acc_x = acc_x[-4*window:]
-                acc_y = acc_y[-4*window:]
-                acc_z = acc_z[-4*window:]
-                index = index[-4*window:]
-
-            ax.clear()
-            ax.plot(index[-window:],acc_x[-window:])
-            ax.plot(index[-window:],acc_y[-window:])
-            ax.plot(index[-window:],acc_z[-window:])
-            fig.canvas.draw()
+            # print(acc_x.shape)
+            if len(acc_x) > 400:
+                acc_x = acc_x[-400:]
+                acc_y = acc_y[-400:]
+                acc_z = acc_z[-400:]
+                index = index[-400:]
+            if live_data == True:
+                ax.clear()
+                ax.plot(index[-window:],acc_x[-window:])
+                ax.plot(index[-window:],acc_y[-window:])
+                ax.plot(index[-window:],acc_z[-window:])
+                fig.canvas.draw()
             i+=1
 
 def dump_to_file(data_point,filepath):
@@ -56,17 +64,30 @@ def dump_to_file(data_point,filepath):
     f.close()
 
 
+def configure_pen():
+    global acc_x,acc_y,acc_z
+    time.sleep(5)
+    confx = np.mean(acc_x)
+    confy = np.mean(acc_y)
+    confz = np.mean(acc_z)
+
+    return confx,confy,confz
+
 def train_mode():
     global acc_x,acc_y,acc_z
+    global confx,confy,confz
     global DEST_FILE
 
     print("[Training Mode activated]")
-    print("[Commands]\n1. 'start' - start training \n2. 'exit' - exit training mode")
+    print("[Commands]\n1. 'start' - start training \n2. 'exit' - exit training mode\n3. 'conf' - configure the pen")
     while True:
         command = raw_input("Type command here: ")
         if command == "exit":
             print("[Exiting Training Mode]")
             return
+        if command == "conf":
+            print('Configuring...')
+            confx,confy,confz = configure_pen()
         if command == "start":
             print("training starting in ...") 
             for i in xrange(3,0,-1):
@@ -75,10 +96,10 @@ def train_mode():
                 time.sleep(1)
 
             print("[training ...]")
-            time.sleep(2)
-            curr_x = acc_x[-200:]
-            curr_y = acc_y[-200:]
-            curr_z = acc_z[-200:]
+            time.sleep(2.5)
+            curr_x = acc_x[-30:] -confx
+            curr_y = acc_y[-30:] -confy
+            curr_z = acc_z[-30:] -confz
             print("training data collected")
             data_point = np.array([])
             data_point = np.append(data_point,curr_x)
@@ -112,6 +133,12 @@ def predict_mode():
         
 
 if __name__ == "__main__":
-    get_serial_data()
+    args = sys.argv
+    n = len(args)
+    if n>1:    
+        if args[1] == "livedata":
+            get_serial_data(live_data=True)
+    else:
+        get_serial_data(live_data=False)
 
     
