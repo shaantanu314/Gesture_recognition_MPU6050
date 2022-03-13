@@ -2,7 +2,7 @@
 
 This is a project based on hand Gesture Detection using the accelerometer and gyroscope values from mpu6050 . The real time sensor data is also plotted in a window while running the program.
 
-# Dynamic Time Wrapping 
+# Dynamic Time Warping 
 In time series analysis, **Dynamic time warping (DTW**) is one of the algorithms for measuring similarity between two temporal sequences, which may vary in speed. For instance, similarities in walking could be detected using DTW, even if one person was walking faster than the other, or if there were accelerations and decelerations during the course of an observation. DTW has been applied to temporal sequences of video, audio, and graphics data  indeed, any data that can be turned into a linear sequence can be analyzed with DTW.
 In this project, we want to compare the time series ,ie, the 3-axis accelerometer data and find similarities between them so that we can build a model which can predict the gesture ,ie, letters of english alphabets.
 
